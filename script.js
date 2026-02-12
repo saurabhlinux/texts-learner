@@ -3,13 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTextData = [];
     let currentVerse = null;
     let allowedTypes = [];
-    let blankAnswers = [];
     
-    // For Matching Game
+    // For Matching Game Variables
     let selectedLeft = null;
     let matchesFound = 0;
     let totalMatches = 0;
 
+    // DOM Elements
     const selectionScreen = document.getElementById('selection-screen');
     const quizScreen = document.getElementById('quiz-screen');
     const textSelect = document.getElementById('text-select');
@@ -20,11 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionBox = document.getElementById('question-box');
     const answerBox = document.getElementById('answer-box');
     const feedbackMessage = document.getElementById('feedback-message');
-    const actionBtn = document.getElementById('action-btn');
     const nextBtn = document.getElementById('next-btn');
-    const card = document.querySelector('.card');
+    const quizCard = document.getElementById('quiz-card');
+    
+    // Note: 'action-btn' is re-queried dynamically because we clone it
 
-    // 1. Initialize
+    // 1. Initialize - Load Text List
     fetch('data/index.json')
         .then(res => res.json())
         .then(data => {
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startBtn.disabled = textSelect.value === "";
     });
 
-    // 2. Start Quiz
+    // 2. Start Quiz Logic
     startBtn.addEventListener('click', async () => {
         const filename = textSelect.value;
         const selectedTextObj = availableTexts.find(t => t.filename === filename);
@@ -72,16 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
             quizScreen.classList.add('active');
             nextQuestion();
         } catch (err) {
-            alert("Error loading text data. Ensure JSON files are correct.");
+            alert("Error loading text data. Check console.");
             console.error(err);
         } finally {
             startBtn.textContent = "Start Learning";
         }
     });
 
-    // 3. Back Button - FIX: Force Reload
+    // 3. Back Button - FORCE RELOAD to prevent state errors
     backBtn.addEventListener('click', () => {
-        // This forces the browser to refresh, clearing all memory and glitches
         window.location.reload(); 
     });
 
@@ -90,18 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Question Router
     function nextQuestion() {
         resetState();
-        // Trigger animation
-        card.classList.remove('animate-fade');
-        void card.offsetWidth; // Trigger reflow
-        card.classList.add('animate-fade');
+        
+        // Trigger Animation
+        quizCard.classList.remove('animate-fade');
+        void quizCard.offsetWidth; // Trigger reflow
+        quizCard.classList.add('animate-fade');
 
-        if(!currentTextData.length) return;
+        if(!currentTextData.length) {
+            questionBox.innerHTML = "No verses found in data.";
+            return;
+        }
 
-        // Random Verse for single-verse questions
+        // Pick Random Verse (for single-verse questions)
         const randomIndex = Math.floor(Math.random() * currentTextData.length);
         currentVerse = currentTextData[randomIndex];
 
-        // Random Type
+        // Pick Random Question Type
         const typeIndex = Math.floor(Math.random() * allowedTypes.length);
         const type = allowedTypes[typeIndex];
 
@@ -118,19 +122,21 @@ document.addEventListener('DOMContentLoaded', () => {
         answerBox.classList.add('hidden');
         answerBox.innerHTML = '';
         nextBtn.classList.add('hidden');
-        actionBtn.classList.remove('hidden');
-        questionBox.innerHTML = ''; // Clear previous content
         
-        // Clone button to remove old listeners
-        const newBtn = actionBtn.cloneNode(true);
-        actionBtn.parentNode.replaceChild(newBtn, actionBtn);
-        // Re-assign global
-        window.actionBtnGlobal = newBtn;
+        // Get current action button
+        const oldBtn = document.getElementById('action-btn');
+        oldBtn.classList.remove('hidden');
+        
+        // Clone button to remove old event listeners (Cleanest way for vanilla JS)
+        const newBtn = oldBtn.cloneNode(true);
+        oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+        
+        questionBox.innerHTML = '';
     }
 
     // --- Type 1: Flashcards ---
     function setupFlashcard() {
-        const btn = window.actionBtnGlobal;
+        const btn = document.getElementById('action-btn');
         const isShlokToMeaning = Math.random() > 0.5;
         
         questionTypeLabel.textContent = isShlokToMeaning ? "Recall Meaning" : "Recall Shlok";
@@ -153,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Type 2: Guess Number ---
     function setupGuessNumber() {
-        const btn = window.actionBtnGlobal;
+        const btn = document.getElementById('action-btn');
         questionTypeLabel.textContent = "What is the verse number?";
         btn.textContent = "Check";
         
@@ -179,39 +185,37 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- Type 3: Fill Blanks (Split into Shlok or Meaning) ---
+    // --- Type 3: Fill Blanks ---
     function setupFillBlanks(isShlok) {
-        const btn = window.actionBtnGlobal;
+        const btn = document.getElementById('action-btn');
         questionTypeLabel.textContent = isShlok ? "Complete the Sanskrit Shlok" : "Complete the Hindi Meaning";
         btn.textContent = "Check Answers";
 
         const text = isShlok ? currentVerse.shlok : currentVerse.meaning;
         const words = text.split(' ');
         let html = '<div style="line-height:2.5">';
-        blankAnswers = [];
+        let blankAnswers = [];
         
         words.forEach((word, idx) => {
-            // Logic: Hide word if long enough OR random chance
+            // Hide word logic
             let shouldHide = (word.length > 2 && Math.random() > 0.5);
-            
             if(shouldHide) {
                 let clean = word.replace(/[|।॥,?-]/g, ''); 
                 if(clean.length > 0) {
                     blankAnswers.push({ index: idx, answer: clean });
-                    html += `<input type="text" class="blank-input" data-ans="${clean}" style="width:80px"> `;
-                } else {
-                    html += word + " ";
-                }
-            } else {
-                html += word + " ";
-            }
+                    html += `<input type="text" class="blank-input" data-ans="${clean}" style="width:100px"> `;
+                } else { html += word + " "; }
+            } else { html += word + " "; }
         });
         html += '</div>';
 
-        // Add Number hint
         if(!isShlok) html += `<div class="number-text" style="margin-top:10px;">(${currentVerse.number})</div>`;
 
-        if(blankAnswers.length === 0) { setupFillBlanks(isShlok); return; } // Retry if no blanks
+        // Retry if no blanks generated (prevent recursion on empty texts)
+        if(blankAnswers.length === 0 && words.length > 1) { 
+             setupFillBlanks(isShlok); 
+             return; 
+        }
 
         questionBox.innerHTML = html;
 
@@ -222,13 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const correct = cleanString(inp.getAttribute('data-ans'));
                 const user = cleanString(inp.value);
                 
-                // Partial match allow
                 if(user === correct) {
                     inp.classList.add('correct');
                     inp.classList.remove('incorrect');
                 } else {
                     inp.classList.add('incorrect');
-                    // Show correct answer in brackets
                     inp.value = `${inp.value} (${correct})`;
                     allCorrect = false;
                 }
@@ -244,33 +246,34 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- Type 4: Matching Game (New!) ---
+    // --- Type 4: Matching Game (FIXED) ---
     function setupMatchingGame() {
-        const btn = window.actionBtnGlobal;
+        const btn = document.getElementById('action-btn');
         questionTypeLabel.textContent = "Match Shlok to Meaning";
-        btn.classList.add('hidden'); // No button needed, interactive game
+        btn.classList.add('hidden'); 
 
-        // 1. Get 3 random unique verses
-        if(currentTextData.length < 3) {
-            questionBox.innerHTML = "Not enough verses for matching game.";
+        // CRITICAL FIX: Use Min(3, data length) to avoid infinite loop
+        let count = Math.min(3, currentTextData.length);
+        
+        if(count < 2) {
+            questionBox.innerHTML = "Need at least 2 verses for matching game.";
             nextBtn.classList.remove('hidden');
             return;
         }
 
         let subset = [];
         let indices = new Set();
-        while(indices.size < 3) {
+        // Loop securely until we have 'count' unique items
+        while(indices.size < count) {
             indices.add(Math.floor(Math.random() * currentTextData.length));
         }
         indices.forEach(i => subset.push(currentTextData[i]));
 
-        totalMatches = 3;
+        totalMatches = count;
         matchesFound = 0;
         selectedLeft = null;
 
-        // 2. Prepare Columns
-        // Left side: Shloks (Random order? No, keep index order)
-        // Right side: Meanings (Shuffled)
+        // Shuffle right side
         let leftItems = [...subset];
         let rightItems = [...subset].sort(() => Math.random() - 0.5);
 
@@ -283,33 +286,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftCol = document.getElementById('col-left');
         const rightCol = document.getElementById('col-right');
 
-        // Render Left (Shloks)
         leftItems.forEach(item => {
             let div = document.createElement('div');
             div.className = 'match-item';
-            div.textContent = item.shlok.substring(0, 50) + "..."; // Truncate
-            div.dataset.id = item.number; // Use verse number as ID
-            div.onclick = () => selectLeft(div);
+            div.textContent = item.shlok.substring(0, 45) + "..."; 
+            div.dataset.id = item.number;
+            div.onclick = function() { selectLeft(this); };
             leftCol.appendChild(div);
         });
 
-        // Render Right (Meanings)
         rightItems.forEach(item => {
             let div = document.createElement('div');
             div.className = 'match-item';
             div.textContent = item.meaning;
             div.dataset.id = item.number;
-            div.onclick = () => selectRight(div);
+            div.onclick = function() { selectRight(this); };
             rightCol.appendChild(div);
         });
     }
 
     function selectLeft(elem) {
         if(elem.classList.contains('matched')) return;
-        
-        // Deselect previous left
         document.querySelectorAll('#col-left .match-item').forEach(e => e.classList.remove('selected'));
-        
         elem.classList.add('selected');
         selectedLeft = elem;
     }
@@ -317,9 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function selectRight(elem) {
         if(!selectedLeft || elem.classList.contains('matched')) return;
 
-        // Check Match
         if(selectedLeft.dataset.id === elem.dataset.id) {
-            // Match!
+            // Match
             selectedLeft.classList.add('matched');
             elem.classList.add('matched');
             selectedLeft.classList.remove('selected');
@@ -338,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Helpers ---
+    // Helpers
     function showFeedback(msg, isSuccess) {
         feedbackMessage.textContent = msg;
         feedbackMessage.className = isSuccess ? 'success-msg' : 'error-msg';
