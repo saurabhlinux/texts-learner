@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         opt.textContent = t.name;
         textSelect.appendChild(opt);
     });
-
-    // 2. Start Quiz Logic
+    // 2. Start Quiz Logic (Updated with Range Filter)
     startBtn.addEventListener('click', async () => {
         const filename = textSelect.value;
         const selectedTextObj = availableTexts.find(t => t.filename === filename);
@@ -54,17 +53,41 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Get Range Inputs
+        const startVal = document.getElementById('start-verse').value.trim();
+        const endVal = document.getElementById('end-verse').value.trim();
+
         try {
             startBtn.textContent = "Loading...";
+            
+            // 1. Fetch Data
+            // Note: Since you are using the 'Index.json' fix, ensure filename is correct
             const res = await fetch(`data/${filename}`);
             if(!res.ok) throw new Error("File not found");
-            
-            currentTextData = await res.json();
-            currentTextTitle.textContent = selectedTextObj.name;
+            let fullData = await res.json();
+
+            // 2. Filter Data based on Range
+            if (startVal || endVal) {
+                currentTextData = fullData.filter(verse => {
+                    return isVerseInRange(verse.number, startVal, endVal);
+                });
+            } else {
+                currentTextData = fullData;
+            }
+
+            // Validation
+            if (currentTextData.length === 0) {
+                alert("No verses found in that range! Check your numbers (e.g., 1.1 to 1.5).");
+                startBtn.textContent = "Start Learning";
+                return;
+            }
+
+            currentTextTitle.textContent = selectedTextObj.name + ` (${currentTextData.length} Verses)`;
             
             selectionScreen.classList.remove('active');
             quizScreen.classList.add('active');
             nextQuestion();
+
         } catch (err) {
             alert("Error loading text data. Check console.");
             console.error(err);
@@ -72,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startBtn.textContent = "Start Learning";
         }
     });
-
+   
     // 3. Back Button - FORCE RELOAD to prevent state errors
     backBtn.addEventListener('click', () => {
         window.location.reload(); 
@@ -334,8 +357,28 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackMessage.className = isSuccess ? 'success-msg' : 'error-msg';
     }
 
+    // --- Helper: Range Checker ---
+    // Handles logic like: 1.10 is greater than 1.2
+    function isVerseInRange(verseNum, startStr, endStr) {
+        // Helper to convert "1.5" -> 1005 (Chapter 1 * 1000 + Verse 5)
+        // This allows mathematical comparison
+        const parseId = (id) => {
+            if (!id) return 0;
+            const parts = id.toString().split('.');
+            if (parts.length === 1) return parseInt(parts[0]) * 1000; // Case: "5" -> 5000
+            // Case: "1.15" -> 1015, "1.5" -> 1005
+            return (parseInt(parts[0]) * 1000) + parseInt(parts[1]);
+        };
+
+        const vVal = parseId(verseNum);
+        const sVal = startStr ? parseId(startStr) : 0; // Default to 0 if blank
+        const eVal = endStr ? parseId(endStr) : 999999; // Default to infinity if blank
+
+        return vVal >= sVal && vVal <= eVal;
+    }
     function cleanString(str) {
         return str ? str.trim().toLowerCase().replace(/\s+/g, ' ') : "";
     }
 });
+
 
