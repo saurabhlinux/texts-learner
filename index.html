@@ -46,6 +46,14 @@
             </div>
         </fieldset>
 
+        <fieldset class="options-group">
+            <legend>Select Range (Optional):</legend>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="start-verse" class="range-input" placeholder="Start (e.g. 1.1)">
+                <input type="text" id="end-verse" class="range-input" placeholder="End (e.g. 1.15)">
+            </div>
+            <small style="color: #666; display: block; margin-top: 5px;">Leave blank to study all verses.</small>
+        </fieldset>
         <button id="start-btn" disabled>Start Learning</button>
     </div>
 
@@ -74,3 +82,4 @@
 <script src="script.js"></script>
 </body>
 </html>
+
