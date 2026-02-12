@@ -107,6 +107,14 @@ button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; 
     margin: 4px;
     border-radius: 4px;
 }
+/* Add to style.css */
+.range-input {
+    width: 50%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
 .blank-input.correct { background: #d4edda; border-bottom-color: var(--success-color); color: var(--success-color); }
 .blank-input.incorrect { background: #f8d7da; border-bottom-color: var(--error-color); color: var(--error-color); }
 
@@ -138,3 +146,4 @@ button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; 
 @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
 .animate-fade { animation: fadeIn 0.4s ease-out; }
+
