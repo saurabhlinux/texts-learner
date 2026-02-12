@@ -1,0 +1,98 @@
+:root {
+    --primary-color: #8e44ad;
+    --secondary-color: #f3e5f5;
+    --text-color: #333;
+    --success-color: #27ae60;
+    --error-color: #c0392b;
+    --bg-color: #f4f4f4;
+}
+
+body {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+h1 { text-align: center; color: var(--primary-color); }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Selection Screen */
+select {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-family: inherit;
+}
+
+.options-group {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+button {
+    padding: 12px 24px;
+    font-size: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+}
+button:hover { background-color: #703688; }
+button:disabled { background-color: #ccc; cursor: not-allowed; }
+#back-btn { width: auto; background-color: #777; padding: 5px 15px; font-size: 0.9rem;}
+
+/* Quiz Screen */
+.quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card { background: var(--secondary-color); padding: 25px; border-radius: 10px; }
+
+#question-type-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.content-box { font-size: 1.3rem; margin-bottom: 15px; white-space: pre-wrap; }
+.shlok-text { font-weight: bold; color: #4a148c; }
+.meaning-text { color: #333; }
+.number-text { font-weight: bold; color: var(--primary-color); font-size: 1rem; }
+
+.blank-input {
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    background: transparent;
+    font-size: 1.2rem;
+    padding: 5px;
+    text-align: center;
+    width: 100px;
+    color: var(--primary-color);
+    margin: 5px;
+}
+.blank-input.correct { border-bottom-color: var(--success-color); color: var(--success-color); }
+.blank-input.incorrect { border-bottom-color: var(--error-color); color: var(--error-color); }
+
+.hidden { display: none; }
+#feedback-message { font-weight: bold; margin: 15px 0; min-height: 24px;}
+.success-msg { color: var(--success-color); }
+.error-msg { color: var(--error-color); }

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sacred Text Learner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>स्वाध्याय (Self Study)</h1>
+    </header>
+
+    <div id="selection-screen" class="screen active">
+        <label for="text-select">Select Text (ग्रन्थ चुनें):</label>
+        <select id="text-select">
+            <option value="">-- Loading texts... --</option>
+        </select>
+
+        <fieldset class="options-group">
+            <legend>Select Question Types:</legend>
+            <div class="checkbox-container">
+                <label>
+                    <input type="checkbox" name="qtype" value="flashcard" checked> 
+                    Flashcards (Shlok ↔ Meaning)
+                </label>
+                <label>
+                    <input type="checkbox" name="qtype" value="guessNumber" checked> 
+                    Guess the Number
+                </label>
+                <label>
+                    <input type="checkbox" name="qtype" value="fillBlanks" checked> 
+                    Fill in the Blanks
+                </label>
+            </div>
+        </fieldset>
+
+        <button id="start-btn" disabled>Start Learning</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <button id="back-btn">← Back to Menu</button>
+            <h2 id="current-text-title"></h2>
+        </div>
+
+        <div class="card">
+            <div id="question-type-label">Question Type</div>
+            
+            <div class="content-box" id="question-box"></div>
+            <div class="content-box hidden" id="answer-box"></div>
+            
+            <div id="feedback-message"></div>
+
+            <div class="controls">
+                <button id="action-btn">Show Answer</button>
+                <button id="next-btn" class="hidden">Next Question →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
