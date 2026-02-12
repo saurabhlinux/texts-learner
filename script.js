@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentVerse = null;
     let allowedTypes = [];
     let blankAnswers = [];
+    
+    // For Matching Game
+    let selectedLeft = null;
+    let matchesFound = 0;
+    let totalMatches = 0;
 
     const selectionScreen = document.getElementById('selection-screen');
     const quizScreen = document.getElementById('quiz-screen');
@@ -17,8 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackMessage = document.getElementById('feedback-message');
     const actionBtn = document.getElementById('action-btn');
     const nextBtn = document.getElementById('next-btn');
+    const card = document.querySelector('.card');
 
-    // Load list of books
+    // 1. Initialize
     fetch('data/index.json')
         .then(res => res.json())
         .then(data => {
@@ -31,12 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 textSelect.appendChild(opt);
             });
         })
-        .catch(err => console.error("Error loading index:", err));
+        .catch(err => {
+            textSelect.innerHTML = '<option>Error loading texts</option>';
+            console.error(err);
+        });
 
     textSelect.addEventListener('change', () => {
         startBtn.disabled = textSelect.value === "";
     });
 
+    // 2. Start Quiz
     startBtn.addEventListener('click', async () => {
         const filename = textSelect.value;
         const selectedTextObj = availableTexts.find(t => t.filename === filename);
@@ -46,13 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
         allowedTypes = Array.from(checkboxes).map(cb => cb.value);
 
         if (allowedTypes.length === 0) {
-            alert("Select at least one question type.");
+            alert("Please select at least one question type.");
             return;
         }
 
         try {
             startBtn.textContent = "Loading...";
             const res = await fetch(`data/${filename}`);
+            if(!res.ok) throw new Error("File not found");
+            
             currentTextData = await res.json();
             currentTextTitle.textContent = selectedTextObj.name;
             
@@ -60,55 +72,68 @@ document.addEventListener('DOMContentLoaded', () => {
             quizScreen.classList.add('active');
             nextQuestion();
         } catch (err) {
-            alert("Error loading text data.");
+            alert("Error loading text data. Ensure JSON files are correct.");
+            console.error(err);
         } finally {
             startBtn.textContent = "Start Learning";
         }
     });
 
+    // 3. Back Button - FIX: Force Reload
     backBtn.addEventListener('click', () => {
-        quizScreen.classList.remove('active');
-        selectionScreen.classList.add('active');
+        // This forces the browser to refresh, clearing all memory and glitches
+        window.location.reload(); 
     });
 
     nextBtn.addEventListener('click', nextQuestion);
 
+    // 4. Question Router
     function nextQuestion() {
         resetState();
+        // Trigger animation
+        card.classList.remove('animate-fade');
+        void card.offsetWidth; // Trigger reflow
+        card.classList.add('animate-fade');
+
         if(!currentTextData.length) return;
 
-        // Random Verse
+        // Random Verse for single-verse questions
         const randomIndex = Math.floor(Math.random() * currentTextData.length);
         currentVerse = currentTextData[randomIndex];
 
-        // Random Type from Allowed List
+        // Random Type
         const typeIndex = Math.floor(Math.random() * allowedTypes.length);
         const type = allowedTypes[typeIndex];
 
         if (type === 'flashcard') setupFlashcard();
         else if (type === 'guessNumber') setupGuessNumber();
-        else if (type === 'fillBlanks') setupFillBlanks();
+        else if (type === 'fillBlanksShlok') setupFillBlanks(true);
+        else if (type === 'fillBlanksMeaning') setupFillBlanks(false);
+        else if (type === 'matching') setupMatchingGame();
     }
 
     function resetState() {
         feedbackMessage.textContent = '';
+        feedbackMessage.className = '';
         answerBox.classList.add('hidden');
         answerBox.innerHTML = '';
         nextBtn.classList.add('hidden');
         actionBtn.classList.remove('hidden');
-        actionBtn.disabled = false;
-        // Remove old event listeners by cloning
+        questionBox.innerHTML = ''; // Clear previous content
+        
+        // Clone button to remove old listeners
         const newBtn = actionBtn.cloneNode(true);
         actionBtn.parentNode.replaceChild(newBtn, actionBtn);
-        // We will bind new listeners in setup functions
+        // Re-assign global
+        window.actionBtnGlobal = newBtn;
     }
 
     // --- Type 1: Flashcards ---
     function setupFlashcard() {
-        const btn = document.getElementById('action-btn');
+        const btn = window.actionBtnGlobal;
         const isShlokToMeaning = Math.random() > 0.5;
         
-        questionTypeLabel.textContent = isShlokToMeaning ? "Flashcard: Recall Meaning" : "Flashcard: Recall Shlok";
+        questionTypeLabel.textContent = isShlokToMeaning ? "Recall Meaning" : "Recall Shlok";
         btn.textContent = "Reveal Answer";
 
         if(isShlokToMeaning) {
@@ -128,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Type 2: Guess Number ---
     function setupGuessNumber() {
-        const btn = document.getElementById('action-btn');
+        const btn = window.actionBtnGlobal;
         questionTypeLabel.textContent = "What is the verse number?";
         btn.textContent = "Check";
         
@@ -139,25 +164,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btn.onclick = () => {
             const input = document.getElementById('num-guess');
-            const userVal = input.value.trim();
-            if(userVal === currentVerse.number) {
-                showFeedback("Correct!", true);
+            const userVal = cleanString(input.value);
+            const correctVal = cleanString(currentVerse.number.toString());
+            
+            if(userVal === correctVal) {
+                showFeedback("Correct! (सही)", true);
                 input.classList.add('correct');
+                btn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
             } else {
                 showFeedback(`Incorrect. It is ${currentVerse.number}`, false);
                 input.classList.add('incorrect');
             }
-            btn.classList.add('hidden');
-            nextBtn.classList.remove('hidden');
         };
     }
 
-    // --- Type 3: Fill Blanks ---
-    function setupFillBlanks() {
-        const btn = document.getElementById('action-btn');
-        const isShlok = Math.random() > 0.5;
-        questionTypeLabel.textContent = isShlok ? "Fill in the Shlok" : "Fill in the Meaning";
-        btn.textContent = "Check";
+    // --- Type 3: Fill Blanks (Split into Shlok or Meaning) ---
+    function setupFillBlanks(isShlok) {
+        const btn = window.actionBtnGlobal;
+        questionTypeLabel.textContent = isShlok ? "Complete the Sanskrit Shlok" : "Complete the Hindi Meaning";
+        btn.textContent = "Check Answers";
 
         const text = isShlok ? currentVerse.shlok : currentVerse.meaning;
         const words = text.split(' ');
@@ -165,19 +191,27 @@ document.addEventListener('DOMContentLoaded', () => {
         blankAnswers = [];
         
         words.forEach((word, idx) => {
-            // Hide word if length > 2 and random chance, or force hide if it's a short sentence
-            if(word.length > 1 && Math.random() > 0.6) {
-                let clean = word.replace(/[|।॥,?-]/g, ''); // Remove punctuation for answer
-                blankAnswers.push({ index: idx, answer: clean });
-                html += `<input type="text" class="blank-input" data-ans="${clean}" style="width:80px"> `;
+            // Logic: Hide word if long enough OR random chance
+            let shouldHide = (word.length > 2 && Math.random() > 0.5);
+            
+            if(shouldHide) {
+                let clean = word.replace(/[|।॥,?-]/g, ''); 
+                if(clean.length > 0) {
+                    blankAnswers.push({ index: idx, answer: clean });
+                    html += `<input type="text" class="blank-input" data-ans="${clean}" style="width:80px"> `;
+                } else {
+                    html += word + " ";
+                }
             } else {
                 html += word + " ";
             }
         });
         html += '</div>';
 
-        // Retry if no blanks were made
-        if(blankAnswers.length === 0) { setupFillBlanks(); return; }
+        // Add Number hint
+        if(!isShlok) html += `<div class="number-text" style="margin-top:10px;">(${currentVerse.number})</div>`;
+
+        if(blankAnswers.length === 0) { setupFillBlanks(isShlok); return; } // Retry if no blanks
 
         questionBox.innerHTML = html;
 
@@ -185,25 +219,132 @@ document.addEventListener('DOMContentLoaded', () => {
             const inputs = document.querySelectorAll('.blank-input');
             let allCorrect = true;
             inputs.forEach(inp => {
-                const correct = inp.getAttribute('data-ans').toLowerCase();
-                const user = inp.value.trim().toLowerCase();
+                const correct = cleanString(inp.getAttribute('data-ans'));
+                const user = cleanString(inp.value);
+                
+                // Partial match allow
                 if(user === correct) {
                     inp.classList.add('correct');
                     inp.classList.remove('incorrect');
                 } else {
                     inp.classList.add('incorrect');
+                    // Show correct answer in brackets
                     inp.value = `${inp.value} (${correct})`;
                     allCorrect = false;
                 }
             });
-            showFeedback(allCorrect ? "Perfect!" : "Review corrections.", allCorrect);
-            btn.classList.add('hidden');
-            nextBtn.classList.remove('hidden');
+            
+            if(allCorrect) {
+                showFeedback("Perfect! अद्भुत!", true);
+                btn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                showFeedback("Review corrections above.", false);
+            }
         };
     }
 
+    // --- Type 4: Matching Game (New!) ---
+    function setupMatchingGame() {
+        const btn = window.actionBtnGlobal;
+        questionTypeLabel.textContent = "Match Shlok to Meaning";
+        btn.classList.add('hidden'); // No button needed, interactive game
+
+        // 1. Get 3 random unique verses
+        if(currentTextData.length < 3) {
+            questionBox.innerHTML = "Not enough verses for matching game.";
+            nextBtn.classList.remove('hidden');
+            return;
+        }
+
+        let subset = [];
+        let indices = new Set();
+        while(indices.size < 3) {
+            indices.add(Math.floor(Math.random() * currentTextData.length));
+        }
+        indices.forEach(i => subset.push(currentTextData[i]));
+
+        totalMatches = 3;
+        matchesFound = 0;
+        selectedLeft = null;
+
+        // 2. Prepare Columns
+        // Left side: Shloks (Random order? No, keep index order)
+        // Right side: Meanings (Shuffled)
+        let leftItems = [...subset];
+        let rightItems = [...subset].sort(() => Math.random() - 0.5);
+
+        let html = `<div class="match-container">
+            <div class="match-column" id="col-left"></div>
+            <div class="match-column" id="col-right"></div>
+        </div>`;
+        questionBox.innerHTML = html;
+
+        const leftCol = document.getElementById('col-left');
+        const rightCol = document.getElementById('col-right');
+
+        // Render Left (Shloks)
+        leftItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item.shlok.substring(0, 50) + "..."; // Truncate
+            div.dataset.id = item.number; // Use verse number as ID
+            div.onclick = () => selectLeft(div);
+            leftCol.appendChild(div);
+        });
+
+        // Render Right (Meanings)
+        rightItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item.meaning;
+            div.dataset.id = item.number;
+            div.onclick = () => selectRight(div);
+            rightCol.appendChild(div);
+        });
+    }
+
+    function selectLeft(elem) {
+        if(elem.classList.contains('matched')) return;
+        
+        // Deselect previous left
+        document.querySelectorAll('#col-left .match-item').forEach(e => e.classList.remove('selected'));
+        
+        elem.classList.add('selected');
+        selectedLeft = elem;
+    }
+
+    function selectRight(elem) {
+        if(!selectedLeft || elem.classList.contains('matched')) return;
+
+        // Check Match
+        if(selectedLeft.dataset.id === elem.dataset.id) {
+            // Match!
+            selectedLeft.classList.add('matched');
+            elem.classList.add('matched');
+            selectedLeft.classList.remove('selected');
+            selectedLeft = null;
+            matchesFound++;
+            
+            if(matchesFound === totalMatches) {
+                showFeedback("All Matched! जय हो!", true);
+                nextBtn.classList.remove('hidden');
+            }
+        } else {
+            // No Match
+            elem.classList.add('error');
+            setTimeout(() => elem.classList.remove('error'), 400);
+            showFeedback("Try again", false);
+        }
+    }
+
+    // --- Helpers ---
     function showFeedback(msg, isSuccess) {
         feedbackMessage.textContent = msg;
         feedbackMessage.className = isSuccess ? 'success-msg' : 'error-msg';
+    }
+
+    function cleanString(str) {
+        return str ? str.trim().toLowerCase().replace(/\s+/g, ' ') : "";
     }
 });
