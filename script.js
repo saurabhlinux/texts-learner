@@ -25,26 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Note: 'action-btn' is re-queried dynamically because we clone it
 
-    // 1. Initialize - Load Text List
-    fetch('data/index.json')
-        .then(res => res.json())
-        .then(data => {
-            availableTexts = data;
-            textSelect.innerHTML = '<option value="">-- Select a Text --</option>';
-            data.forEach(t => {
-                let opt = document.createElement('option');
-                opt.value = t.filename;
-                opt.textContent = t.name;
-                textSelect.appendChild(opt);
-            });
-        })
-        .catch(err => {
-            textSelect.innerHTML = '<option>Error loading texts</option>';
-            console.error(err);
-        });
+    // 1. Initialize (FIXED: Hardcoded list to prevent loading errors)
+    availableTexts = [
+        { "filename": "BhagavadGita.json", "name": "श्रीमद्भगवद्गीता" },
+        { "filename": "ShriHitChaurasi.json", "name": "श्री हित चौरासी" }
+    ];
 
-    textSelect.addEventListener('change', () => {
-        startBtn.disabled = textSelect.value === "";
+    // Populate dropdown immediately
+    textSelect.innerHTML = '<option value="">-- Select a Text --</option>';
+    availableTexts.forEach(t => {
+        let opt = document.createElement('option');
+        opt.value = t.filename;
+        opt.textContent = t.name;
+        textSelect.appendChild(opt);
     });
 
     // 2. Start Quiz Logic
@@ -345,3 +338,4 @@ document.addEventListener('DOMContentLoaded', () => {
         return str ? str.trim().toLowerCase().replace(/\s+/g, ' ') : "";
     }
 });
+
