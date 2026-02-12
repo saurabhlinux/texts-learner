@@ -5,7 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sacred Text Learner</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* CSS STYLES */
+        :root {
+            --primary-color: #8e44ad;
+            --secondary-color: #f3e5f5;
+            --text-color: #333;
+            --success-color: #27ae60;
+            --error-color: #c0392b;
+            --bg-color: #f4f4f4;
+        }
+
+        body {
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; color: var(--primary-color); }
+
+        /* Screens */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Selection Elements */
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+        }
+
+        .options-group {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .checkbox-container label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+
+        /* Range Inputs */
+        .range-input {
+            width: 50%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Buttons */
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+        button:hover { background-color: #703688; transform: scale(1.02); }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+        #back-btn { width: auto; background-color: #777; padding: 6px 16px; font-size: 0.9rem; margin-top: 0;}
+
+        /* Quiz Card */
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: var(--secondary-color); padding: 25px; border-radius: 12px; min-height: 200px; }
+
+        #question-type-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .content-box { font-size: 1.3rem; margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6; }
+        .shlok-text { font-weight: bold; color: #4a148c; }
+        .meaning-text { color: #333; }
+        .number-text { font-weight: bold; color: var(--primary-color); font-size: 1rem; }
+
+        /* Inputs */
+        .blank-input {
+            border: none;
+            border-bottom: 2px solid var(--primary-color);
+            background: rgba(255,255,255,0.5);
+            font-size: 1.2rem;
+            padding: 5px;
+            text-align: center;
+            width: 120px;
+            color: var(--primary-color);
+            margin: 4px;
+            border-radius: 4px;
+        }
+        .blank-input.correct { background: #d4edda; border-bottom-color: var(--success-color); color: var(--success-color); }
+        .blank-input.incorrect { background: #f8d7da; border-bottom-color: var(--error-color); color: var(--error-color); }
+
+        /* Matching Game Styles */
+        .match-container { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
+        .match-column { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 10px; }
+        .match-item {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .match-item:hover { border-color: var(--primary-color); background: #fdfdfd; }
+        .match-item.selected { border-color: var(--primary-color); background: #e1bee7; transform: translateX(5px); }
+        .match-item.matched { border-color: var(--success-color); background: #d4edda; opacity: 0.6; pointer-events: none; }
+        .match-item.error { animation: shake 0.4s; border-color: var(--error-color); background: #f8d7da; }
+
+        /* Feedback & Hidden */
+        .hidden { display: none; }
+        #feedback-message { font-weight: bold; margin: 15px 0; min-height: 24px; font-size: 1.1rem; }
+        .success-msg { color: var(--success-color); }
+        .error-msg { color: var(--error-color); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+
+        .animate-fade { animation: fadeIn 0.4s ease-out; }
+    </style>
 </head>
 <body>
 
@@ -23,26 +175,11 @@
         <fieldset class="options-group">
             <legend>Select Question Types:</legend>
             <div class="checkbox-container">
-                <label>
-                    <input type="checkbox" name="qtype" value="flashcard" checked> 
-                    Flashcards (Reveal Answer)
-                </label>
-                <label>
-                    <input type="checkbox" name="qtype" value="guessNumber" checked> 
-                    Guess Verse Number
-                </label>
-                <label>
-                    <input type="checkbox" name="qtype" value="fillBlanksShlok" checked> 
-                    Fill in Blanks (Shlok)
-                </label>
-                <label>
-                    <input type="checkbox" name="qtype" value="fillBlanksMeaning" checked> 
-                    Fill in Blanks (Meaning)
-                </label>
-                <label>
-                    <input type="checkbox" name="qtype" value="matching" checked> 
-                    Match Shlok to Meaning
-                </label>
+                <label><input type="checkbox" name="qtype" value="flashcard" checked> Flashcards</label>
+                <label><input type="checkbox" name="qtype" value="guessNumber" checked> Guess Verse Number</label>
+                <label><input type="checkbox" name="qtype" value="fillBlanksShlok" checked> Fill Blanks (Shlok)</label>
+                <label><input type="checkbox" name="qtype" value="fillBlanksMeaning" checked> Fill Blanks (Meaning)</label>
+                <label><input type="checkbox" name="qtype" value="matching" checked> Match Shlok to Meaning</label>
             </div>
         </fieldset>
 
@@ -54,6 +191,7 @@
             </div>
             <small style="color: #666; display: block; margin-top: 5px;">Leave blank to study all verses.</small>
         </fieldset>
+
         <button id="start-btn" disabled>Start Learning</button>
     </div>
 
@@ -65,10 +203,8 @@
 
         <div class="card" id="quiz-card">
             <div id="question-type-label">Question Type</div>
-            
             <div class="content-box" id="question-box"></div>
             <div class="content-box hidden" id="answer-box"></div>
-            
             <div id="feedback-message"></div>
 
             <div class="controls">
@@ -79,7 +215,330 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let availableTexts = [];
+    let currentTextData = [];
+    let currentVerse = null;
+    let allowedTypes = [];
+    let selectedLeft = null;
+    let matchesFound = 0;
+    let totalMatches = 0;
+
+    // DOM Elements
+    const selectionScreen = document.getElementById('selection-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const textSelect = document.getElementById('text-select');
+    const startBtn = document.getElementById('start-btn');
+    const backBtn = document.getElementById('back-btn');
+    const currentTextTitle = document.getElementById('current-text-title');
+    const questionTypeLabel = document.getElementById('question-type-label');
+    const questionBox = document.getElementById('question-box');
+    const answerBox = document.getElementById('answer-box');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const nextBtn = document.getElementById('next-btn');
+    const quizCard = document.getElementById('quiz-card');
+
+    // 1. Initialize (Fixed List)
+    availableTexts = [
+        { "filename": "BhagavadGita.json", "name": "श्रीमद्भगवद्गीता" },
+        { "filename": "ShriHitChaurasi.json", "name": "श्री हित चौरासी" }
+    ];
+
+    // Populate dropdown
+    textSelect.innerHTML = '<option value="">-- Select a Text --</option>';
+    availableTexts.forEach(t => {
+        let opt = document.createElement('option');
+        opt.value = t.filename;
+        opt.textContent = t.name;
+        textSelect.appendChild(opt);
+    });
+
+    // Enable button on selection
+    textSelect.addEventListener('change', () => {
+        startBtn.disabled = textSelect.value === "";
+    });
+
+    // 2. Start Logic
+    startBtn.addEventListener('click', async () => {
+        const filename = textSelect.value;
+        if (!filename) return;
+
+        const checkboxes = document.querySelectorAll('input[name="qtype"]:checked');
+        allowedTypes = Array.from(checkboxes).map(cb => cb.value);
+
+        if (allowedTypes.length === 0) {
+            alert("Please select at least one question type.");
+            return;
+        }
+
+        const startVal = document.getElementById('start-verse').value.trim();
+        const endVal = document.getElementById('end-verse').value.trim();
+
+        try {
+            startBtn.textContent = "Loading...";
+            
+            // FETCH DATA
+            const res = await fetch(`data/${filename}`);
+            if(!res.ok) throw new Error("File not found or Blocked by Browser Security");
+            let fullData = await res.json();
+
+            // FILTER RANGE
+            if (startVal || endVal) {
+                currentTextData = fullData.filter(verse => {
+                    return isVerseInRange(verse.number, startVal, endVal);
+                });
+            } else {
+                currentTextData = fullData;
+            }
+
+            if (currentTextData.length === 0) {
+                alert("No verses found in that range!");
+                startBtn.textContent = "Start Learning";
+                return;
+            }
+
+            const selectedTextObj = availableTexts.find(t => t.filename === filename);
+            currentTextTitle.textContent = selectedTextObj.name + ` (${currentTextData.length})`;
+            
+            selectionScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            nextQuestion();
+
+        } catch (err) {
+            alert("Error: Could not load data.\n\nIMPORTANT: If you are double-clicking index.html, this will NOT work. You must use 'Live Server' in VS Code or upload to GitHub.");
+            console.error(err);
+        } finally {
+            startBtn.textContent = "Start Learning";
+        }
+    });
+
+    backBtn.addEventListener('click', () => window.location.reload());
+    nextBtn.addEventListener('click', nextQuestion);
+
+    // 3. Question Logic
+    function nextQuestion() {
+        resetState();
+        quizCard.classList.remove('animate-fade');
+        void quizCard.offsetWidth; 
+        quizCard.classList.add('animate-fade');
+
+        if(!currentTextData.length) {
+            questionBox.innerHTML = "No verses available.";
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * currentTextData.length);
+        currentVerse = currentTextData[randomIndex];
+
+        const type = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+
+        if (type === 'flashcard') setupFlashcard();
+        else if (type === 'guessNumber') setupGuessNumber();
+        else if (type === 'fillBlanksShlok') setupFillBlanks(true);
+        else if (type === 'fillBlanksMeaning') setupFillBlanks(false);
+        else if (type === 'matching') setupMatchingGame();
+    }
+
+    function resetState() {
+        feedbackMessage.textContent = '';
+        answerBox.classList.add('hidden');
+        answerBox.innerHTML = '';
+        nextBtn.classList.add('hidden');
+        
+        const oldBtn = document.getElementById('action-btn');
+        oldBtn.classList.remove('hidden');
+        const newBtn = oldBtn.cloneNode(true);
+        oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+        window.actionBtnGlobal = newBtn;
+        
+        questionBox.innerHTML = '';
+    }
+
+    // GAME MODES
+    function setupFlashcard() {
+        const btn = window.actionBtnGlobal;
+        const isShlokToMeaning = Math.random() > 0.5;
+        questionTypeLabel.textContent = isShlokToMeaning ? "Recall Meaning" : "Recall Shlok";
+        btn.textContent = "Reveal Answer";
+
+        if(isShlokToMeaning) {
+            questionBox.innerHTML = `<div class="shlok-text">${currentVerse.shlok}</div><div class="number-text">(${currentVerse.number})</div>`;
+            answerBox.innerHTML = `<div class="meaning-text">${currentVerse.meaning}</div>`;
+        } else {
+            questionBox.innerHTML = `<div class="meaning-text">${currentVerse.meaning}</div><div class="number-text">(${currentVerse.number})</div>`;
+            answerBox.innerHTML = `<div class="shlok-text">${currentVerse.shlok}</div>`;
+        }
+
+        btn.onclick = () => {
+            answerBox.classList.remove('hidden');
+            btn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+        };
+    }
+
+    function setupGuessNumber() {
+        const btn = window.actionBtnGlobal;
+        questionTypeLabel.textContent = "What is the verse number?";
+        btn.textContent = "Check";
+        
+        questionBox.innerHTML = `<div class="shlok-text">${currentVerse.shlok}</div>
+            <div style="margin-top:15px;"><input type="text" id="num-guess" class="blank-input" placeholder="e.g. 1.1"></div>`;
+
+        btn.onclick = () => {
+            const input = document.getElementById('num-guess');
+            const userVal = cleanString(input.value);
+            const correctVal = cleanString(currentVerse.number.toString());
+            if(userVal === correctVal) {
+                showFeedback("Correct!", true);
+                input.classList.add('correct');
+                btn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                showFeedback(`Incorrect. It is ${currentVerse.number}`, false);
+                input.classList.add('incorrect');
+            }
+        };
+    }
+
+    function setupFillBlanks(isShlok) {
+        const btn = window.actionBtnGlobal;
+        questionTypeLabel.textContent = isShlok ? "Complete Shlok" : "Complete Meaning";
+        btn.textContent = "Check";
+
+        const text = isShlok ? currentVerse.shlok : currentVerse.meaning;
+        const words = text.split(' ');
+        let html = '<div style="line-height:2.5">';
+        let blanks = [];
+        
+        words.forEach((word, idx) => {
+            if(word.length > 2 && Math.random() > 0.5) {
+                let clean = word.replace(/[|।॥,?-]/g, ''); 
+                if(clean) {
+                    blanks.push(clean);
+                    html += `<input type="text" class="blank-input" data-ans="${clean}" style="width:100px"> `;
+                } else html += word + " ";
+            } else html += word + " ";
+        });
+        html += '</div>';
+        if(!isShlok) html += `<div class="number-text">(${currentVerse.number})</div>`;
+        
+        if(blanks.length === 0 && words.length > 1) { setupFillBlanks(isShlok); return; }
+
+        questionBox.innerHTML = html;
+
+        btn.onclick = () => {
+            const inputs = document.querySelectorAll('.blank-input');
+            let correctCount = 0;
+            inputs.forEach(inp => {
+                const correct = cleanString(inp.getAttribute('data-ans'));
+                const user = cleanString(inp.value);
+                if(user === correct) {
+                    inp.classList.add('correct');
+                    inp.classList.remove('incorrect');
+                    correctCount++;
+                } else {
+                    inp.classList.add('incorrect');
+                    inp.value = `${inp.value} (${correct})`;
+                }
+            });
+            if(correctCount === inputs.length) {
+                showFeedback("Perfect!", true);
+                btn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            } else showFeedback("Review corrections.", false);
+        };
+    }
+
+    function setupMatchingGame() {
+        const btn = window.actionBtnGlobal;
+        questionTypeLabel.textContent = "Match Shlok to Meaning";
+        btn.classList.add('hidden');
+
+        let count = Math.min(3, currentTextData.length);
+        if(count < 2) {
+            questionBox.innerHTML = "Need at least 2 verses for matching.";
+            nextBtn.classList.remove('hidden');
+            return;
+        }
+
+        let subset = [], indices = new Set();
+        while(indices.size < count) indices.add(Math.floor(Math.random() * currentTextData.length));
+        indices.forEach(i => subset.push(currentTextData[i]));
+
+        totalMatches = count; matchesFound = 0; selectedLeft = null;
+        let leftItems = [...subset];
+        let rightItems = [...subset].sort(() => Math.random() - 0.5);
+
+        let html = `<div class="match-container"><div class="match-column" id="col-left"></div><div class="match-column" id="col-right"></div></div>`;
+        questionBox.innerHTML = html;
+
+        const leftCol = document.getElementById('col-left');
+        const rightCol = document.getElementById('col-right');
+
+        leftItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item.shlok.substring(0, 40) + "...";
+            div.dataset.id = item.number;
+            div.onclick = function() { 
+                if(this.classList.contains('matched')) return;
+                document.querySelectorAll('#col-left .match-item').forEach(e => e.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedLeft = this;
+            };
+            leftCol.appendChild(div);
+        });
+
+        rightItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item.meaning;
+            div.dataset.id = item.number;
+            div.onclick = function() {
+                if(!selectedLeft || this.classList.contains('matched')) return;
+                if(selectedLeft.dataset.id === this.dataset.id) {
+                    selectedLeft.classList.add('matched');
+                    this.classList.add('matched');
+                    selectedLeft.classList.remove('selected');
+                    selectedLeft = null;
+                    matchesFound++;
+                    if(matchesFound === totalMatches) {
+                        showFeedback("All Matched!", true);
+                        nextBtn.classList.remove('hidden');
+                    }
+                } else {
+                    this.classList.add('error');
+                    setTimeout(() => this.classList.remove('error'), 400);
+                }
+            };
+            rightCol.appendChild(div);
+        });
+    }
+
+    // Helpers
+    function showFeedback(msg, isSuccess) {
+        feedbackMessage.textContent = msg;
+        feedbackMessage.className = isSuccess ? 'success-msg' : 'error-msg';
+    }
+
+    function isVerseInRange(verseNum, startStr, endStr) {
+        const parseId = (id) => {
+            if (!id) return 0;
+            const parts = id.toString().split('.');
+            if (parts.length === 1) return parseInt(parts[0]) * 1000;
+            return (parseInt(parts[0]) * 1000) + parseInt(parts[1]);
+        };
+        const vVal = parseId(verseNum);
+        const sVal = startStr ? parseId(startStr) : 0;
+        const eVal = endStr ? parseId(endStr) : 999999;
+        return vVal >= sVal && vVal <= eVal;
+    }
+
+    function cleanString(str) {
+        return str ? str.trim().toLowerCase().replace(/\s+/g, ' ') : "";
+    }
+});
+</script>
 </body>
 </html>
-
