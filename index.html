@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<div class="container animate-pop">
+<div class="container">
     <header>
         <h1>स्वाध्याय (Self Study)</h1>
     </header>
@@ -29,19 +29,19 @@
                 </label>
                 <label>
                     <input type="checkbox" name="qtype" value="guessNumber" checked> 
-                    Guess the Verse Number
+                    Guess Verse Number
                 </label>
                 <label>
                     <input type="checkbox" name="qtype" value="fillBlanksShlok" checked> 
-                    Fill in Blanks (Sanskrit Shlok)
+                    Fill in Blanks (Shlok)
                 </label>
                 <label>
                     <input type="checkbox" name="qtype" value="fillBlanksMeaning" checked> 
-                    Fill in Blanks (Hindi Meaning)
+                    Fill in Blanks (Meaning)
                 </label>
                 <label>
                     <input type="checkbox" name="qtype" value="matching" checked> 
-                    Match Shlok to Meaning (Game)
+                    Match Shlok to Meaning
                 </label>
             </div>
         </fieldset>
@@ -55,7 +55,7 @@
             <h2 id="current-text-title"></h2>
         </div>
 
-        <div class="card animate-fade">
+        <div class="card" id="quiz-card">
             <div id="question-type-label">Question Type</div>
             
             <div class="content-box" id="question-box"></div>
